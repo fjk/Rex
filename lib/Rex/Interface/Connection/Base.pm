@@ -23,6 +23,8 @@ sub new {
 
   $self->{__sudo_options__} = [];
 
+print "2 Rex::Interface::Connection::Base\n";
+print "2    new: $that Proto: $proto\n";
   return $self;
 }
 
@@ -49,6 +51,7 @@ sub get_exec {
   my $exec = Rex::Interface::Exec->create;
   return $exec;
 }
+
 
 sub server {
   my ($self) = @_;

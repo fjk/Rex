@@ -624,7 +624,11 @@ Initiate the connection to $server.
 
 sub connect {
   my ( $self, $server, %override ) = @_;
-
+  
+my ( $package, $filename, $line ) = caller;
+print "Caller: package: '" . $package . "' File: '" . $filename . "' Line: '" . $line . "'\n";
+print "$server\n";
+  
   if ( !ref $server ) {
     $server = Rex::Group::Entry::Server->new( name => $server );
   }
@@ -638,7 +642,7 @@ sub connect {
 
   my $user = $self->user;
 
-  #print Dumper($self);
+#print Dumper($self);
   my $auth = $self->merge_auth($server);
 
   if ( exists $override{auth} ) {

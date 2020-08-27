@@ -1,0 +1,1 @@
+[{"defintion":"my","name":"$major","containerName":null,"kind":13,"line":1},{"kind":13,"line":1,"name":"$minor","containerName":null},{"containerName":"GetOSVersion","name":"Win32","line":1,"kind":12},{"containerName":null,"name":"%major","line":3,"kind":13},{"kind":13,"line":6,"name":"$major","containerName":null},{"line":6,"kind":13,"containerName":null,"name":"%minor"}]

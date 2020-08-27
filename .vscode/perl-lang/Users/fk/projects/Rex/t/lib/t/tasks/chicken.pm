@@ -1,0 +1,1 @@
+[{"line":0,"kind":2,"name":"t::tasks::chicken","defintion":1},{"line":1,"kind":2,"containerName":"","name":"Rex"},{"name":"desc","kind":12,"line":3},{"name":"task","line":4,"kind":12},{"line":6,"kind":12,"name":"before_task_start"},{"name":"before_task_start","line":7,"kind":12},{"name":"after_task_finished","line":8,"kind":12},{"kind":12,"line":9,"name":"after_task_finished"}]

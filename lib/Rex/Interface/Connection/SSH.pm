@@ -19,6 +19,7 @@ BEGIN {
 use Carp;
 use Rex::Helper::IP;
 use Rex::Interface::Connection::Base;
+use Data::Dumper;
 use base qw(Rex::Interface::Connection::Base);
 
 sub new {
@@ -28,16 +29,27 @@ sub new {
 
   bless( $self, $proto );
 
+print "3 Rex::Interface::Connection::SSH\n";
+print "3    new: $that Proto: $proto\n";
+
   return $self;
 }
 
 sub connect {
-  my ( $self, %option ) = @_;
+  my ( $self, %option ) = @_;#
+  
+  my ( $package, $filename, $line ) = caller;
+  print "Caller: package: '" . $package . "' File: '" . $filename . "' Line: '" . $line . "'\n";
 
   my (
     $user, $pass,    $private_key, $public_key, $server,
     $port, $timeout, $auth_type,   $is_sudo
   );
+
+ #  foreach (keys %option) {
+ #      print "SSH: option: key: '$_'->'\n";
+ #      print "SSH: option: val: $option{$_}\n";
+ #  }
 
   $user        = $option{user};
   $pass        = $option{password};
@@ -49,14 +61,27 @@ sub connect {
   $auth_type   = $option{auth_type};
   $is_sudo     = $option{sudo};
 
+ #   my $sftpclass    = $option{sftpclass};
+ #Rex::Logger::info( "SFTP Check: " . $sftpclass);
+    
   $self->{server}        = $server;
   $self->{is_sudo}       = $is_sudo;
+  
   $self->{__auth_info__} = \%option;
 
-  Rex::Logger::debug("Using Net::SSH2 for connection");
+  #my $typ = "Net::SSH2";
+  #Rex::Logger::debug("Using $typ for connection");
   Rex::Logger::debug( "Using user: " . $user );
   Rex::Logger::debug( Rex::Logger::masq( "Using password: %s", $pass ) )
     if defined $pass;
+
+  #Rex::Logger::info( "$typ :Using server: " . $server );
+  #Rex::Logger::info( "$typ :Using port: " . $port);
+  #Rex::Logger::info( "$typ :Using timeout: " . $timeout);
+  #Rex::Logger::info( "$typ :Using public key: " . $public_key);
+  #Rex::Logger::info( "$typ :Using private key: " . $private_key);
+  #Rex::Logger::info( "$typ :Using auth type: " . $auth_type);
+  #Rex::Logger::info( "$typ :Using is sudo: " . $is_sudo);
 
   $self->{ssh} = Net::SSH2->new;
 
@@ -64,16 +89,21 @@ sub connect {
 
 CON_SSH:
   $port    ||= Rex::Config->get_port( server => $server )    || 22;
+  #Rex::Logger::info( "$typ :Using port: " . $port);
+  
   $timeout ||= Rex::Config->get_timeout( server => $server ) || 3;
+  #Rex::Logger::info( "$typ :Using server: " . $server );
+  
   $self->{ssh}->timeout( $timeout * 1000 );
 
   $server =
-    Rex::Config->get_ssh_config_hostname( server => $server ) || $server;
+  Rex::Config->get_ssh_config_hostname( server => $server ) || $server;
+  #Rex::Logger::info( "$typ :Using server: " . $server );
 
   ( $server, $port ) = Rex::Helper::IP::get_server_and_port( $server, $port );
+  #Rex::Logger::info( "$typ :Using ip/port: " . $server . ':' . $port );
 
   Rex::Logger::debug( "Connecting to $server:$port (" . $user . ")" );
-
   unless ( $self->{ssh}->connect( $server, $port ) ) {
     ++$fail_connect;
     sleep 1;
@@ -90,7 +120,7 @@ CON_SSH:
   }
 
   Rex::Logger::debug( "Current Error-Code: " . $self->{ssh}->error() );
-  Rex::Logger::debug("Connected to $server, trying to authenticate.");
+  Rex::Logger::debug( "Connected to $server, trying to authenticate.");
 
   $self->{connected} = 1;
 
@@ -126,7 +156,20 @@ CON_SSH:
     );
   }
 
-  $self->{sftp} = $self->{ssh}->sftp;
+  #if ( defined($sftpclass) and str($sftpclass) ) {
+  #  Rex::Logger::info( "$typ : SFTP Check: " . $sftpclass);
+  #}
+  
+  my $class_name = "Net::SFTP::Foreign";
+  eval "use $class_name;";
+  if ($@) { die("Error loading connection interface $class_name .\n$@"); }
+  $self->{sftp} = Net::SFTP::Foreign->new(ssh2 => $self->{ssh}, backend =>'Net_SSH2');
+  $self->{sftp}->error and die "Unable to stablish SFTP Foreign connection: ". $self->{sftp}->error;
+
+  print "    3 Class Connection ref self ssh? ", ref $self->{ssh}, "\n";
+  print "    3 Class Connection ref self sftp? ", ref $self->{sftp}, "\n";
+
+#  $self->{sftp} = $self->{ssh}->sftp;
 }
 
 sub reconnect {
@@ -162,6 +205,8 @@ sub get_fs_connection_object {
       "Rex needs sftp for file operations, so please install one.", "warn" );
     die("No SFTP server found on remote host.");
   }
+
+  print "    4 get_fs_connection_object ref sftp? ", ref $self->{sftp}, "\n";
   return $self->{sftp};
 }
 

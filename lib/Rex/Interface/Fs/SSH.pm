@@ -77,19 +77,28 @@ sub is_file {
   Rex::Commands::profiler()->start("is_file: $file");
 
   my $sftp = Rex::get_sftp();
-  my $stat = $sftp->stat($file);
+  
+print "    4 ref sftp? ", ref $sftp, "\n";
   Rex::Commands::profiler()->end("is_file: $file");
 
-  defined $stat && defined $stat->{mode}
-    ? return ( Rex::Helper::File::Stat->S_ISREG( $stat->{mode} )
-      || Rex::Helper::File::Stat->S_ISLNK( $stat->{mode} )
-      || Rex::Helper::File::Stat->S_ISBLK( $stat->{mode} )
-      || Rex::Helper::File::Stat->S_ISCHR( $stat->{mode} )
-      || Rex::Helper::File::Stat->S_ISFIFO( $stat->{mode} )
-      || Rex::Helper::File::Stat->S_ISSOCK( $stat->{mode} ) )
-    : return undef; ## no critic ProhibitExplicitReturnUndef
+  if (ref $sftp eq 'Net::SFTP::Foreign') {
+    my $stat_attributes = $sftp->stat($file)
+    or warn "remote stat command failed: ".$sftp->status;
+    
+    print "    4 stat file size? ", $stat_attributes->size, "\n";
+    return $stat_attributes->size;
+  } else {
+    my $stat = $sftp->stat($file);
+    defined $stat && defined $stat->{mode}
+      ? return ( Rex::Helper::File::Stat->S_ISREG( $stat->{mode} )
+        || Rex::Helper::File::Stat->S_ISLNK( $stat->{mode} )
+        || Rex::Helper::File::Stat->S_ISBLK( $stat->{mode} )
+        || Rex::Helper::File::Stat->S_ISCHR( $stat->{mode} )
+        || Rex::Helper::File::Stat->S_ISFIFO( $stat->{mode} )
+        || Rex::Helper::File::Stat->S_ISSOCK( $stat->{mode} ) )
+      : return undef; ## no critic ProhibitExplicitReturnUndef
+  }
 }
-
 sub unlink {
   my ( $self, @files ) = @_;
 
@@ -260,7 +269,10 @@ sub download {
 
     # fix for: #271
     my $ssh  = Rex::is_ssh();
-    my $sftp = $ssh->sftp();
+    
+#    my $sftp = $ssh->sftp();
+print "    4 ref self sftp? ", ref $ssh->{sftp}, "\n";
+my $sftp = $ssh->{sftp};
     eval {
       my $fh = $sftp->open($source) or die($!);
       open( my $out, ">", $target ) or die($!);
