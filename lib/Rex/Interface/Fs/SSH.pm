@@ -25,7 +25,7 @@ sub new {
   my $self  = $proto->SUPER::new(@_);
 
   bless( $self, $proto );
-
+  print "    0 new fs file object\n";
   return $self;
 }
 
@@ -265,18 +265,20 @@ sub download {
 
   Rex::Commands::profiler()->start("download: $source -> $target");
 
-  if ( $^O =~ m/^MSWin/ ) {
-
+#  if ( $^O =~ m/^MSWin/ ) {
+    print "    4 MSWin? \n";
     # fix for: #271
     my $ssh  = Rex::is_ssh();
     
-#    my $sftp = $ssh->sftp();
-print "    4 ref self sftp? ", ref $ssh->{sftp}, "\n";
-my $sftp = $ssh->{sftp};
+    #my $sftp = $ssh->sftp();
+    my $sftp = Rex::get_sftp();
+    print "    4 ref self sftp? ", ref $sftp, "\n";
+    #my $sftp = $ssh->{sftp};
     eval {
       my $fh = $sftp->open($source) or die($!);
       open( my $out, ">", $target ) or die($!);
       binmode $out;
+      print "    4 loop file \n";
       print $out $_ while (<$fh>);
       close $out;
       close $fh;
@@ -285,14 +287,14 @@ my $sftp = $ssh->{sftp};
       Rex::Commands::profiler()->end("download: $source -> $target");
       die( $ssh->error );
     };
-  }
-  else {
-    my $ssh = Rex::is_ssh();
-    if ( !$ssh->scp_get( $source, $target ) ) {
-      Rex::Commands::profiler()->end("download: $source -> $target");
-      die( $ssh->error );
-    }
-  }
+#  } else {
+#    my $ssh = Rex::is_ssh();
+#     print "    4 not on MSWin?\n";
+#     if ( !$ssh->scp_get( $source, $target ) ) {
+#      Rex::Commands::profiler()->end("download: $source -> $target");
+#      die( $ssh->error );
+#   }
+#  }
 
   Rex::Commands::profiler()->end("download: $source -> $target");
 }
