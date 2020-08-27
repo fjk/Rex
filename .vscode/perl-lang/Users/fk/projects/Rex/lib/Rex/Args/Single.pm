@@ -1,1 +1,0 @@
-[{"line":6,"kind":2,"defintion":1,"name":"Rex::Args::Single"},{"name":"strict","containerName":"","kind":2,"line":8},{"line":9,"kind":2,"containerName":"","name":"warnings"},{"children":[],"containerName":"Rex::Args::Single","defintion":"sub","name":"get","line":13,"kind":12}]

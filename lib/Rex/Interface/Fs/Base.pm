@@ -21,6 +21,7 @@ sub new {
 
   bless( $self, $proto );
 
+  print "    0 Base fs abstract object\n";
   return $self;
 }
 
